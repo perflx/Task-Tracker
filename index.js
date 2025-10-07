@@ -65,11 +65,14 @@ function list(status){
         for (let i = 0; i < tasks.length; i++){
             if (tasks[i].status == 'done'){
                 result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.brightGreen}done${colors.reset}\n`;
-            }else if (tasks[i].status == 'to-do'){
+            }else if (tasks[i].status == 'todo'){
                 result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.brightRed}todo${colors.reset}\n`;
+            }else if (tasks[i].status == 'in-progress'){
+                result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.brightMagenta}in-progress${colors.reset}\n`;
             }else{
-                result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.brightMagenta}in-process${colors.reset}\n`;
+                result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.red}Unknown${colors.reset}\n`;
             }
+            
         }
     }else if (status == 'done'){
         for (let i = 0; i < tasks.length; i++){
@@ -80,7 +83,6 @@ function list(status){
     }else if (status == 'in-progress'){
         for (let i = 0; i < tasks.length; i++){
             if (tasks[i].status == status){
-                console.log('It is good!');
                 result = result + `${colors.cyan}${tasks[i].description} ${colors.yellow}(ID:${tasks[i].id})${colors.reset}:${colors.brightMagenta}in-progress${colors.reset}\n`;
             }
         }
@@ -100,7 +102,11 @@ function list(status){
 let tasks = await loadTasks();
 
 function getid(){
-    return tasks[tasks.length-1].id;
+    if (tasks.length < 1){
+        return 0;
+    }else{
+    return tasks[tasks.length-1].id + 1;
+    }
 }
 
 rl.prompt();
@@ -135,6 +141,13 @@ rl.on('line', (line)=>{
 
         case 'mark-in-progress':
         case 'mip':
+            if (!args[0]){
+                console.log(`${colors.red}Fail! You should provide ID of the task${colors.reset}`);
+                break;
+            }else if(args[0] >= getid()){
+                console.log(`${colors.red}No task with ${colors.yellow}ID:${args[0]}${colors.reset}`);
+                break;
+            }
             task = tasks[args[0]];
             if (task.status == 'todo'){
                 task.status = 'in-progress';
@@ -150,21 +163,35 @@ rl.on('line', (line)=>{
 
         case 'mark-done':
         case 'md':
+            if (!args[0]){
+                console.log(`${colors.red}Fail! You should provide ID of the task${colors.reset}`);
+                break;
+            }else if(args[0] >= getid()){
+                console.log(`${colors.red}No task with ${colors.yellow}ID:${args[0]}${colors.reset}`);
+                break;
+            }
             task = tasks[args[0]]
             if (task.status != 'done'){
                 task.status = 'done';
                 task.completedAt = new Date().toLocaleString('ru-RU');
                 task.startedAt = 'done, without starting';
                 saveTasks();
-                console.log(`${colors.green}Success! Status of ${colors.cyan}"${task.description}" ${colors.yellow}(ID:${task.id}) ${colors.green}is ${colors.blue}"${task.status}"${colors.reset}"`);
+                console.log(`${colors.green}Success! Status of ${colors.cyan}"${task.description}" ${colors.yellow}(ID:${task.id}) ${colors.green}is ${colors.blue}"${task.status}"${colors.reset}`);
             }else{
-                console.log(`${colors.red}Fail! Status of ${colors.cyan}"${task.description}" ${colors.yellow}(ID:${task.id}) ${colors.red}is ${colors.blue}"${task.status}"${colors.reset}"`); 
+                console.log(`${colors.red}Fail! Status of ${colors.cyan}"${task.description}" ${colors.yellow}(ID:${task.id}) ${colors.red}is ${colors.blue}"${task.status}"${colors.reset}`); 
             }
             break;
         
         case 'delete':
         case 'del':
         case 'd':
+            if (!args[0]){
+                console.log(`${colors.red}Fail! You should provide ID of the task${colors.reset}`);
+                break;
+            }else if(args[0] >= getid()){
+                console.log(`${colors.red}No task with ${colors.yellow}ID:${args[0]}${colors.reset}`);
+                break;
+            }
             id = args[0];
             valid = false;
             for (let i = 0; i < tasks.length; i++){
@@ -182,6 +209,13 @@ rl.on('line', (line)=>{
         
         case 'update':
         case 'upd':
+            if (!args[0]){
+                console.log(`${colors.red}Fail! You should provide ID of the task${colors.reset}`);
+                break;
+            }else if(args[0] >= getid()){
+                console.log(`${colors.red}No task with ${colors.yellow}ID:${args[0]}${colors.reset}`);
+                break;
+            }
             valid = false;
             id = args[0];
             task = args.slice(1,args.length).join(' ');
@@ -199,11 +233,13 @@ rl.on('line', (line)=>{
             break;
             
         case 'list':
+            if (!args[0]){
+                console.log(list(0))
+                break;
+            }
             status = args[0];
             if (status){
                 console.log(list(status))
-            }else{
-                console.log(list(0))
             }
             break;
         
